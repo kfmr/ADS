@@ -1,0 +1,66 @@
+from flask import request
+from flask import jsonify
+from flask import Flask, json
+from operator import itemgetter
+app = Flask(__name__)
+
+
+corredores = [{"nome": "Usain Bolt", "tempo": 9.63, "id": 14},
+              {"nome": "Andreas Thorkildsen", "tempo": 12.5, "id": 35},
+              {"nome": "Ryan Crouser", "tempo": 10.2, "id": 7},
+              {"nome": "Sergey Litvinov", "tempo": 10.1, "id": 21}, ]
+
+
+@app.route("/")  # só que eu associei ela a uma URL
+def hello():  # função que retorna string
+    return "Hello"
+
+
+@app.get("/corredores")
+def lista_corredores():
+    # traz o resultado organizado pelo id
+    result = sorted(corredores, key=itemgetter('id'))
+    return jsonify({"result": result}), 200
+
+
+@app.get("/corredores/<int:id>")
+def lista_corredor(id):
+    for item in corredores:
+        if item['id'] == id:
+            result = item
+            return jsonify({"result": result}), 200
+    return {"status": "not found"}, 400
+
+
+@app.post("/corredores")
+def novo_corredor():
+    dicionario = request.json
+    corredores.append(dicionario)
+    corredores.sort(key=tempo)
+    return jsonify(corredores)
+
+
+@app.route("/corredores/maior_tempo", methods=["GET"])
+def consulta_por_tempo():
+    corredores.sort(key=tempo)
+    corredor = corredores[-1]
+    return corredor
+
+
+# @app.route("/corredores/maior_tempo", methods=["DELETE"])
+# def remove_por_tempo():
+#     corredores.sort(key=tempo)
+#     corredor = corredores.pop()
+#     return {"removido": corredor}
+
+
+@app.route("/corredores/<int:id_deletar>", methods=["DELETE"])
+def remove_por_id(id_deletar):
+    for corredor in corredores:
+        if corredor['id'] == id_deletar:
+            corredores.remove(corredor)
+            return {"status": "ok"}
+    return {"status": "nao encontrado"}, 404
+
+
+app.run()
